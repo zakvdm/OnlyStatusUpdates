@@ -46,6 +46,8 @@
           BLUE: 3399FF
           MAROON: 9A3334
        */
+       .hidden { display: none; }
+
        body { font-family: ‘Arimo’, "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; }
 
        a { text-align: center; }
@@ -66,12 +68,6 @@
        .comments { margin-bottom: 10px; }
        .comment-div { background: #F3EFE0; }
        .comment-count { color: #3399FF; font-size: 1em; cursor: pointer; }
-
-       /*
-       #logout { float: right; font-size:0.9em; color: #999; cursor: pointer; }
-       #more { float: left; font-size:0.9em; color: #999; cursor: pointer; }
-       */
-       .hidden { display: none; }
 
        #more { margin: 20px 0 20px 0; float: left; }
        #logout { margin: 20px 20px 20px 0; float: right; }
@@ -112,54 +108,85 @@
 
    var lastPostTime = null;
 
+   var nameElementHtml = "<span class='name' />";
+   var commentCountElementHtml = "<span class='comment-count' ></span>"
+
    function getNewsCallback(response) {
        appStatusElement.hide();
        moreButton.show();
-       statusesElement = $('#statuses');
        for( i=0; i<response.data.length; i++) {
            post = response.data[i]
            if (post.type == "status" && post.message) {
-               name = post.from.name;
-               message = post.message;
-
-               nameElement = "<span class='name' >" + name + "</span>";
-               timeAgoElement = "<time class='timeago' datetime=" + post.created_time + "/>";
-               commentCountElement = "<span class='comment-count' ><u>" + post.comments.count + " Comments</u></span>"
-
-               topBarSpan = "<span class='ten columns remove-bottom'>" + nameElement;
-               if (post.comments.count > 0) {
-                   topBarSpan = topBarSpan + " - " + commentCountElement;
-               }
-               topBarSpan = topBarSpan + " - " + timeAgoElement + "</span>";
-
-               messageElement = $("<span class='status sixteen columns half-bottom'>" + message + "</span>");
-
-               statusElement = $("<div id='" + post.id + "' class='status-container' />");
-               statusElement.append($(topBarSpan));
-               statusElement.append(messageElement);
-               statusElement.append(getCommentsElement(post.comments));
-
-               statusElement.append("<hr/>");
+               statusElement = createNewStatusElement(post.id);
+               updateStatusElement(statusElement, post);
 
                statusesElement.append(statusElement);
-
-               $("#" + post.id + " .comment-count").click(toggleComments);
            }
            lastPostTime = post.created_time;
        }
-
-       // Pretty print all the update times:
-       $("time.timeago").timeago();
 
        // Show the button for loading more:
        moreButton.click(function() { getStatuses(); });
        moreButton.show();
    }
 
-   function getCommentsElement(commentData) {
-       commentsDiv = $("<div class='comments fourteen columns offset-by-one'/>");
+   function createNewStatusElement(id) {
+       topBarSpan = "<span class='topbar ten columns remove-bottom' />";
 
-       if (commentData.data) {
+       messageElement = $("<span class='status sixteen columns half-bottom' />");
+
+       statusElement = $("<div id='" + id + "' class='status-container' />");
+       statusElement.append($(topBarSpan));
+       statusElement.append(messageElement);
+       statusElement.append(createNewCommentsElement());
+
+       statusElement.append("<hr/>");
+
+       return statusElement;
+   }
+
+   function createNewCommentsElement() {
+       commentsDiv = $("<div class='comments fourteen columns offset-by-one'/>");
+       commentsDiv.hide();
+
+       return commentsDiv;
+   }
+
+   function updateStatusElement(statusElement, content) {
+       topBarElement = statusElement.find('.topbar');
+
+       topBarHtml = nameElementHtml;
+       if (content.comments && content.comments.count > 0) {
+           topBarHtml = topBarHtml + " - " + commentCountElementHtml;
+       }
+       if (content.created_time) {
+           topBarHtml = topBarHtml + " - <time class='timeago' datetime=" + content.created_time + "/>";
+       }
+       
+       topBarElement.html(topBarHtml);
+
+       if (content.from && content.from.name) {
+           topBarElement.find('.name').text(content.from.name);
+       }
+       if (content.comments && content.comments.count > 0) {
+           topBarElement.find('.comment-count').html("<u>" + content.comments.count + " Comments</u>");
+       }
+
+       statusElement.find('.status').text(content.message);
+
+       // UPDATE COMMENTS:
+       updateCommentsElement(statusElement.find('.comments'), content.comments);
+
+       statusElement.find('.comment-count').click(toggleComments);
+
+       // Pretty print all the update times:
+       statusElement.find('.timeago').timeago();
+   }
+
+   function updateCommentsElement(commentsElement, commentData) {
+       commentsElement.html("");
+
+       if (commentData && commentData.data) {
            for (j = 0; j < commentData.data.length; j++) {
                comment = commentData.data[j];
                name = comment.from.name;
@@ -175,19 +202,15 @@
                    commentDiv = commentDiv + "<hr/>";
                }
                commentDiv = commentDiv + "</div>";
-               commentsDiv.append(commentDiv);
-
+               commentsElement.append(commentDiv);
            }
        }
-
-       commentsDiv.hide();
-
-       //return commentsDiv.clone().wrap('<div>').parent().html();
-       return commentsDiv;
    }
 
    function toggleComments() {
-       $("#" + this.parentNode.parentNode.id + " .comments").slideToggle('slow');
+       postId = this.parentNode.parentNode.id;
+       loadFullPost(postId);
+       $("#" + postId + " .comments").slideToggle('slow');
    }
 
 
@@ -203,18 +226,35 @@
        }
    }
 
-   function postStatus() {
-       statusText = $('#updateStatusTextArea').val();
+   function publishStatus() {
+       textArea = $('#updateStatusTextArea');
+       statusText = textArea.val();
        console.log('Posting new status: ' + statusText);
        FB.api('/me/feed', 'post', { message: statusText }, function(response) {
                        if (!response || response.error) {
                            alert("Couldn't update status for some reason!");
                        } else {
                            console.log('Status successfully updated.');
-                           $('#updateStatusTextArea').val("");
+                           //txt = textArea.val();
+                           textArea.val("");
+                           statusElement = createNewStatusElement(response.id);
+                           statusesElement.prepend(statusElement);
+
+                           //content = {}
+                           //content.message = txt;
+
+                           //updateStatusElement(statusElement, content);
+                           loadFullPost(response.id);
                        }
                    });
    }
+
+   function loadFullPost(id) {
+       statusElement = $('#' + id);
+       
+       FB.api('/' + id, { fields: ["type", "from", "message", "comments"] }, function(response) { updateStatusElement(statusElement, response); });
+   }
+   
 
    // START 'ER UP:
    FB.init({
@@ -237,7 +277,7 @@
        startButton.hide();
        logoutButton.click(logout);
        logoutButton.show();
-       postButton.click(postStatus);
+       postButton.click(publishStatus);
        $('#update-status').show();
        console.log('Welcome!  Fetching statuses.... ');
        getStatuses();
@@ -274,7 +314,7 @@
    var postButton = $('#post');
    var logoutButton = $('#logout');
    var appStatusElement = $('#appstatus');
-
+   var statusesElement = $('#statuses');
 
    function start() {
        startButton.hide();
