@@ -69,9 +69,9 @@
        .comment-div { background: #F3EFE0; }
        .comment-count { color: #3399FF; font-size: 1em; cursor: pointer; }
 
-       #more { margin: 20px 0 20px 0; float: left; }
-       #logout { margin: 20px 20px 20px 0; float: right; }
-       #start { font-size: 1.2em; margin: 20px 0 20px 0; }
+       #more { margin: 20px 0 20px 0; float: left; display: none; }
+       #logout { margin: 20px 20px 20px 0; float: right; display: none; }
+       #start { font-size: 1.2em; margin: 20px 0 20px 0; display: none; }
    </style>
 </head> 
 <body> 
@@ -90,11 +90,11 @@
                 </div>
         </div>
 
-        <a id="start" class="one columns button hidden"></a>
+        <a id="start" class="one columns button"></a>
         <div id="statuses" class="sixteen columns"></div>
         <div id="appstatus" class="one columns"></div>
-        <a id="more" class="one columns button hidden">Load More...</a>
-        <a id="logout" class="one columns button hidden">Logout</a> 
+        <a id="more" class="one columns button">Load More...</a>
+        <a id="logout" class="one columns button">Logout</a> 
 
     </div>
 
