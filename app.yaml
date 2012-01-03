@@ -5,18 +5,16 @@ api_version: 1
 threadsafe: true
 
 handlers:
-- url: /jquery
-  static_dir: jquery
 - url: /images
   static_dir: images
 - url: /javascripts
   static_dir: javascripts
 - url: /stylesheets
   static_dir: stylesheets
-- url: /content
-  static_dir: content
 - url: /robots.txt
   static_files: robots.txt
   upload: robots.txt
+  secure: optional
 - url: /.*
   script: main.application
+  secure: always
