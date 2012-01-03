@@ -25,13 +25,12 @@
     <link rel="stylesheet" href="stylesheets/skeleton.css">
     <link rel="stylesheet" href="stylesheets/layout.css">
 
-    <link href='http://fonts.googleapis.com/css?family=Carter+One' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
 
     <!-- Javascript
     ================================================== -->
     <!--script type="text/javascript" src="jquery/jquery-1.5.1.min.js"></script-->
-    <script src="http://connect.facebook.net/en_US/all.js"></script> 
+    <script src="https://connect.facebook.net/en_US/all.js"></script> 
     
     <!-- Favicons
     ================================================== -->
@@ -47,14 +46,17 @@
           BLUE: 3399FF
           MAROON: 9A3334
        */
-       body { font-family: ‘Arimo’, Arial, serif; font-weight: 400; }
+       body { font-family: ‘Arimo’, "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; }
 
        a { text-align: center; }
        hr { margin: 0 0 0 0; }
 
+       textarea { min-height: 30px; }
+
        #topbar { margin: 10px 0 0 0; border-bottom: solid #777; border-width: 2px; }
 
        #topbar h3 { text-align: center; }
+       #topbar h6 { text-align: left; color: #555; font-family: 'Arimo'; }
 
        .status-container { border-bottom: solid #9A3334; border-width: 1px; }
        .status { font-size: 1.4em; color: #111; }
@@ -69,9 +71,11 @@
        #logout { float: right; font-size:0.9em; color: #999; cursor: pointer; }
        #more { float: left; font-size:0.9em; color: #999; cursor: pointer; }
        */
-       #more { font-family: 'Arimo'; margin: 20px 0 20px 0; float: left; }
-       #logout { font-family: 'Arimo'; margin: 20px 20px 20px 0; float: right; }
-       #start { font-size: 2em; color: #444; cursor: pointer; margin-top: 20px; }
+       .hidden { display: none; }
+
+       #more { margin: 20px 0 20px 0; float: left; }
+       #logout { margin: 20px 20px 20px 0; float: right; }
+       #start { font-size: 1.2em; margin: 20px 0 20px 0; }
    </style>
 </head> 
 <body> 
@@ -79,16 +83,22 @@
 
     <div class="container">
         <div id="topbar" class="sixteen columns" >
-                <h3 class="half-bottom four columns" ><em><strong>Only Status Updates</em></strong></h3>
-                <textarea id="updateStatusTextArea" class="ten columns alpha half-bottom"></textarea>
-                <a id="update" class="one columns button">Post</a>
+                <div id="title" class="remove-bottom six columns alpha">
+                    <h6 class="remove-bottom">no cruft</h6>
+                    <h3 class="remove-bottom"><em><strong>Only Status Updates</em></strong></h3>
+                </div>
+
+                <div id="update-status" class="remove-bottom ten columns omega">
+                    <textarea id="updateStatusTextArea" class="eight columns alpha half-bottom"></textarea>
+                    <a id="update" class="one columns button half-bottom">Post</a>
+                </div>
         </div>
 
-        <a id="start" class="eight columns button"></a>
+        <a id="start" class="one columns button hidden"></a>
         <div id="statuses" class="sixteen columns"></div>
-        <div id="appstatus" class="eight columns"></div>
-        <a id="more" class="one columns button">Load More...</a>
-        <a id="logout" class="one columns button">Logout</a> 
+        <div id="appstatus" class="one columns"></div>
+        <a id="more" class="one columns button hidden">Load More...</a>
+        <a id="logout" class="one columns button hidden">Logout</a> 
 
     </div>
 
@@ -103,7 +113,7 @@
    var lastPostTime = null;
 
    function getNewsCallback(response) {
-       appStatusButton.hide();
+       appStatusElement.hide();
        moreButton.show();
        statusesElement = $('#statuses');
        for( i=0; i<response.data.length; i++) {
@@ -141,6 +151,9 @@
        // Pretty print all the update times:
        $("time.timeago").timeago();
 
+       // Show the button for loading more:
+       moreButton.click(function() { getStatuses(); });
+       moreButton.show();
    }
 
    function getCommentsElement(commentData) {
@@ -179,9 +192,9 @@
 
 
    function getStatuses() {
-       appStatusButton.show();
+       appStatusElement.text("Loading...");
+       appStatusElement.show();
        moreButton.hide();
-       $("#appstatus").text("Loading...");
        var LIMIT = 50;
        if (lastPostTime) {
            FB.api('/me/home', { limit: LIMIT, until: lastPostTime, fields: ["type", "from", "message", "comments"] }, getNewsCallback);
@@ -195,7 +208,7 @@
         appId  : '204566032964137',
         status : true, // check login status
         cookie : true, // enable cookies 
-        channelUrl: 'http://onlystatusupdates.appspot.com/channel.html',
+        channelUrl: 'https://onlystatusupdates.appspot.com/channel.html',
         xfbml  : false  // parse XFBML
       });
    FB.Event.subscribe('auth.sessionChange', function(response) {
@@ -209,10 +222,9 @@
 
    function handleValidSession() {
        startButton.hide();
-       moreButton.click(function() { getStatuses(); });
-       moreButton.show();
        logoutButton.click(function() { logout(); });
        logoutButton.show();
+       $('#update-status').show();
        console.log('Welcome!  Fetching statuses.... ');
        getStatuses();
    }
@@ -231,16 +243,22 @@
    function logout() {
        console.log('Logging out!');
 
-       FB.logout(function(response) {
-           $('#start').text("Click here to start");
-           $('#start').click(function() { start(); });
-       });
+       FB.logout(loadInitialLoggedOutState);
+   }
+
+   function loadInitialLoggedOutState() {
+       $('#update-status').hide();
+       moreButton.hide();
+       logoutButton.hide();
+       startButton.text("Click here to start");
+       startButton.click(function() { login(); });
+       startButton.show();
    }
 
    var startButton = $('#start');
    var moreButton = $('#more');
    var logoutButton = $('#logout');
-   var appStatusButton = $('#appstatus');
+   var appStatusElement = $('#appstatus');
 
    function start() {
        startButton.hide();
@@ -249,6 +267,7 @@
 
 
        // TEMP:
+/*
        startButton.hide();
        moreButton.click(function() { getStatuses(); });
        moreButton.show();
@@ -258,8 +277,9 @@
 
        response = {};
 
-       //getNewsCallback(response);
+       getNewsCallback(response);
        //////////////////////////////////
+*/
 
        FB.getLoginStatus(function(response) {
                if (response.status === 'connected') {
@@ -272,11 +292,9 @@
                    //var accessToken = response.authResponse.accessToken;
                    handleValidSession();
                } else {
-                   startButton.text("Click here to start");
-                   startButton.click(function() { login(); });
-                   startButton.show();
+                   loadInitialLoggedOutState();
                }
-               });
+           });
    }
 
    start();
