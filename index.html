@@ -88,9 +88,9 @@
                     <h3 class="remove-bottom"><em><strong>Only Status Updates</em></strong></h3>
                 </div>
 
-                <div id="update-status" class="remove-bottom ten columns omega">
+                <div id="update-status" class="remove-bottom ten columns omega hidden">
                     <textarea id="updateStatusTextArea" class="eight columns alpha half-bottom"></textarea>
-                    <a id="update" class="one columns button half-bottom">Post</a>
+                    <a id="post" class="one columns button half-bottom">Post</a>
                 </div>
         </div>
 
@@ -203,6 +203,19 @@
        }
    }
 
+   function postStatus() {
+       statusText = $('#updateStatusTextArea').val();
+       console.log('Posting new status: ' + statusText);
+       FB.api('/me/feed', 'post', { message: statusText }, function(response) {
+                       if (!response || response.error) {
+                           alert("Couldn't update status for some reason!");
+                       } else {
+                           console.log('Status successfully updated.');
+                           $('#updateStatusTextArea').val("");
+                       }
+                   });
+   }
+
    // START 'ER UP:
    FB.init({
         appId  : '204566032964137',
@@ -222,8 +235,9 @@
 
    function handleValidSession() {
        startButton.hide();
-       logoutButton.click(function() { logout(); });
+       logoutButton.click(logout);
        logoutButton.show();
+       postButton.click(postStatus);
        $('#update-status').show();
        console.log('Welcome!  Fetching statuses.... ');
        getStatuses();
@@ -237,7 +251,7 @@
              console.log('User cancelled login or did not fully authorize.');
              $('#start').text("Click to try again");
           }
-       }, {scope: 'read_stream'});
+       }, {scope: 'read_stream,publish_stream'});
    }
 
    function logout() {
@@ -257,8 +271,10 @@
 
    var startButton = $('#start');
    var moreButton = $('#more');
+   var postButton = $('#post');
    var logoutButton = $('#logout');
    var appStatusElement = $('#appstatus');
+
 
    function start() {
        startButton.hide();
