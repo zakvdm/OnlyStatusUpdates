@@ -116,7 +116,7 @@
        moreButton.show();
        for( i=0; i<response.data.length; i++) {
            post = response.data[i]
-           if (post.type == "status" && post.message) {
+           if (isStatusUpdate(post)) {
                statusElement = createNewStatusElement(post.id);
                updateStatusElement(statusElement, post);
 
@@ -128,6 +128,11 @@
        // Show the button for loading more:
        moreButton.click(function() { getStatuses(); });
        moreButton.show();
+   }
+
+   function isStatusUpdate(item) {
+       // Exclude items with a "to" field because they are aimed at a specific person, not a general status update...
+       return item.type == "status" && item.message && !item.to;
    }
 
    function createNewStatusElement(id) {
@@ -219,11 +224,11 @@
        appStatusElement.show();
        moreButton.hide();
        var LIMIT = 50;
+       params = { limit: LIMIT, fields: ["type", "from", "to", "message", "comments"] }
        if (lastPostTime) {
-           FB.api('/me/home', { limit: LIMIT, until: lastPostTime, fields: ["type", "from", "message", "comments"] }, getNewsCallback);
-       } else {
-           FB.api('/me/home', { limit: LIMIT, fields: ["type", "from", "message", "comments"] }, getNewsCallback);
+           params.until = lastPostTime;
        }
+       FB.api('/me/home', params, getNewsCallback);
    }
 
    function publishStatus() {
