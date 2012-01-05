@@ -48,7 +48,7 @@
        */
        .hidden { display: none; }
 
-       body { font-family: ‘Arimo’, "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; }
+       body { font-family: ‘Arimo’, "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; background: url(images/bg.gif) fixed repeat; }
 
        a { text-align: center; }
        hr { margin: 0 0 0 0; }
@@ -59,6 +59,9 @@
 
        #topbar h3 { text-align: center; }
        #topbar h6 { text-align: left; color: #555; font-family: 'Arimo'; }
+
+       #topbar-right { margin: 0 0 0 0; }
+       #progress-spinner { display: block; margin-left: auto; margin-right: auto; }
 
        .status-container { border-bottom: solid #9A3334; border-width: 1px; }
        .status { font-size: 1.4em; color: #111; }
@@ -84,9 +87,12 @@
                     <h3 class="remove-bottom"><em><strong>Only Status Updates</em></strong></h3>
                 </div>
 
-                <div id="update-status" class="remove-bottom ten columns omega hidden">
-                    <textarea id="updateStatusTextArea" class="eight columns alpha half-bottom" placeholder="What's on your mind?" ></textarea>
-                    <a id="post" class="one columns button half-bottom">Post</a>
+                <div id="update-status" class="remove-bottom ten columns omega">
+                    <textarea id="updateStatusTextArea" class="clearfix eight columns alpha half-bottom" placeholder="What's on your mind?" ></textarea>
+                    <div id="topbar-right" class="clearfix one columns omega">
+                        <a id="post" class="one columns button half-bottom alpha">Post</a>
+                        <!--img id="progress-spinner" class="one columns alpha"  src="images/progress-spinner.gif" alt="Busy..." /-->
+                    </div>
                 </div>
         </div>
 
